@@ -240,19 +240,14 @@
         }
 
        async function registerUser() {
-            const name = document.getElementById("name").value;
-            const birthdate = document.getElementById("birthdate").value;
-            const gender = document.getElementById("gender").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+            const name = document.getElementById("regName").value;
+            const birthdate = document.getElementById("regBirthdate").value;
+            const gender = document.getElementById("regGender").value;
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
 
             if (!name || !birthdate || !gender || !email || !password) {
                 alert("Compila tutti i campi");
-                return;
-            }
-
-            if (!email || !password) {
-                alert("Inserisci email e password");
                 return;
             }
 
@@ -273,7 +268,8 @@
             if (data.error) {
                 alert(data.error);
             } else {
-                alert("Registrazione completata! Ora fai login 🔐");
+                alert("Registrazione completata! Controlla la tua email per verificare l’account 🔐");
+                showLogin();
             }
         }
         function logout() {
