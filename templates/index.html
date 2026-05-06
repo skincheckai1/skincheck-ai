@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinAtelier AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #FAF7F2; margin: 0; display: flex; }
+        #sidebar { display: none; width: 80px; height: 100vh; background: white; border-right: 1px solid #E8D5C4; flex-direction: column; align-items: center; padding-top: 40px; position: fixed; left: 0; z-index: 1000; }
+        .main-content { width: 100%; transition: margin 0.3s; }
+        .sidebar-active .main-content { margin-left: 80px; width: calc(100% - 80px); }
+        .page { display: none; padding: 40px 20px 100px; min-height: 100vh; overflow-y: auto; }
+        .page.active { display: block; }
+        .nav-icon { margin-bottom: 40px; cursor: pointer; opacity: 0.4; font-size: 1.8rem; }
+        .nav-icon.active { opacity: 1; color: #D9B99B; }
+        .awin-btn {
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, #D9B99B, #C9A27F);
+            color: white;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .awin-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .luxury-card { background: white; border-radius: 25px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <nav id="sidebar">
+        <div onclick="vaiA('scanner-page')" id="nav-scan" class="nav-icon active">📸</div>
+        <div onclick="vaiA('calendar-page')" id="nav-cal" class="nav-icon">🗓️</div>
+        <div onclick="logout()" class="nav-icon">🚪</div>
+    </nav>
+
+    <div class="main-content">
+        <div id="login-page" class="page active flex items-center justify-center">
+            <div class="text-center w-full max-w-sm">
+                <h1 class="text-4xl font-serif mb-10">SkinAtelier</h1>
+                <div class="luxury-card">
+
+                    
+                    <input type="email" id="email" placeholder="Email"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                    <input type="password" id="password" placeholder="Password"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                   <button onclick="eseguiLogin()" class="w-full bg-black text-white py-4 rounded-xl font-bold">
+                        ACCEDI
+                    </button>
+
+                    <p onclick="showForgotPassword()" class="mt-4 text-sm text-[#D9B99B] font-bold cursor-pointer">
+                        Password dimenticata?
+                    </p>
+
+                    <div id="forgotBox" class="hidden mt-4">
+                        <input type="email" id="forgotEmail" placeholder="Inserisci la tua email"
+                            class="w-full border p-4 rounded-xl mb-3 outline-none">
+
+                        <button onclick="forgotPassword()" class="w-full bg-[#D9B99B] text-white py-3 rounded-xl font-bold">
+                            Invia link reset
+                        </button>
+                    </div>
+
+                    <button onclick="showRegister()" class="w-full mt-3 bg-gray-500 text-white py-3 rounded-xl font-bold">
+                        CREA ACCOUNT
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="register-page" class="page flex items-center justify-center" style="display:none;">
+            <div class="text-center w-full max-w-sm">
+                <h1 class="text-4xl font-serif mb-10">Crea account</h1>
+
+                <div class="luxury-card">
+                    <input type="text" id="regName" placeholder="Nome"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                    <input type="date" id="regBirthdate"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                    <select id="regGender" class="w-full border p-4 rounded-xl mb-4 outline-none">
+                        <option value="">Genere</option>
+                        <option value="Donna">Donna</option>
+                        <option value="Uomo">Uomo</option>
+                        <option value="Altro">Altro</option>
+                    </select>
+
+                    <input type="email" id="regEmail" placeholder="Email"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                    <input type="password" id="regPassword" placeholder="Password"
+                        class="w-full border p-4 rounded-xl mb-4 outline-none">
+
+                    <button onclick="registerUser()" class="w-full bg-[#D9B99B] text-white py-4 rounded-xl font-bold">
+                        REGISTRATI
+                    </button>
+
+                    <button onclick="showLogin()" class="w-full mt-3 bg-gray-500 text-white py-3 rounded-xl font-bold">
+                        Torna al login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scanner-page" class="page">
+            <div class="max-w-xl mx-auto">
+                <h2 class="text-2xl font-serif mb-8">Benvenuta, <span id="display-name" class="text-[#D9B99B]">...</span></h2>
+                <div class="luxury-card mb-6">
+                    <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handlePreview(event)">
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <button type="button" onclick="openCamera()" class="bg-[#D9B99B] text-white py-4 rounded-xl font-bold">
+                            📸 Scatta foto
+                        </button>
+
+                        <button type="button" onclick="openGallery()" class="bg-[#FAF7F2] text-black py-4 rounded-xl font-bold border">
+                            📁 Carica foto
+                        </button>
+                    </div>
+
+                    <img id="previewImage" style="display:none;" class="w-full rounded-2xl mb-4 border" />
+                    <button onclick="startAnalysis()" id="btnStart"
+                        class="w-full bg-gradient-to-r from-[#D9B99B] to-[#C9A27F] text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition">
+                        ✨ ANALIZZA LA MIA PELLE
+                    </button>
+                    <button onclick="toggleNotifications()" id="notifyBtn" class="w-full mt-3 bg-black text-white py-3 rounded-xl font-bold">
+                        🔔 Notifiche ON
+                    </button>
+                    <div id="loading" class="hidden mt-4 text-center">
+                        <div class="mx-auto w-12 h-12 border-4 border-[#E8D5C4] border-t-[#D9B99B] rounded-full animate-spin"></div>
+                        <p class="mt-4 font-bold text-[#D9B99B]">Analisi AI in corso...</p>
+                        <p class="text-xs text-gray-500 mt-1">Sto valutando pelle, routine e prodotti migliori per te</p>
+                    </div>
+                </div>
+                <div id="result-container" class="hidden luxury-card border-l-4 border-[#D9B99B]">
+                    <div id="analysis-text" class="text-sm leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 💬 CHAT AI -->
+        <div class="luxury-card mt-6">
+            <h3 class="text-center font-bold mb-4">Consulente Skincare ✨</h3>
+
+            <div id="chatBox" style="height:320px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
+
+            <div class="flex gap-2">
+                <input id="msg" placeholder="Scrivi qui..."
+                    class="flex-1 border p-3 rounded-xl outline-none">
+
+                <button onclick="sendMsg()"
+                    class="bg-[#D9B99B] text-white px-4 rounded-xl">
+                    Invia
+                </button>
+            </div>
+        </div>
+
+        <div id="calendar-page" class="page">
+            <div class="max-w-xl mx-auto">
+                <h2 class="text-2xl font-serif mb-8 text-center">La Tua Agenda</h2>
+                <div class="luxury-card mb-6"><div id="calendar"></div></div>
+                <div id="history-list" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fullCalendar, user = null;
+        let notificationsEnabled = true;
+
+        function showRegister() {
+            document.getElementById("login-page").style.display = "none";
+            document.getElementById("register-page").style.display = "flex";
+        }
+
+        function showLogin() {
+            document.getElementById("register-page").style.display = "none";
+            document.getElementById("login-page").style.display = "flex";
+        }
+
+        function showForgotPassword() {
+            document.getElementById("forgotBox").classList.toggle("hidden");
+        }
+
+        async function forgotPassword() {
+            const email = document.getElementById("forgotEmail").value;
+
+            if (!email) {
+                alert("Inserisci la tua email");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("email", email);
+
+            await fetch("/forgot-password", {
+                method: "POST",
+                body: fd
+            });
+
+            alert("Se l’email è registrata, riceverai il link per reimpostare la password 🔐");
+        }
+
+        async function toggleNotifications() {
+            notificationsEnabled = !notificationsEnabled;
+
+            document.getElementById("notifyBtn").innerText = notificationsEnabled
+                ? "🔔 Notifiche ON"
+                : "🔕 Notifiche OFF";
+
+            // 🔥 SALVA NEL DATABASE
+            const fd = new FormData();
+            fd.append("user_id", user.user_id);
+            fd.append("enabled", notificationsEnabled ? 1 : 0);
+
+            await fetch("/update-notifications", {
+                method: "POST",
+                body: fd
+            });
+           
+            user.notifications_enabled = notificationsEnabled ? 1 : 0;
+            localStorage.setItem("skinUser", JSON.stringify(user));
+        }
+
+       async function registerUser() {
+            const name = document.getElementById("name").value;
+            const birthdate = document.getElementById("birthdate").value;
+            const gender = document.getElementById("gender").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!name || !birthdate || !gender || !email || !password) {
+                alert("Compila tutti i campi");
+                return;
+            }
+
+            if (!email || !password) {
+                alert("Inserisci email e password");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("name", name);
+            fd.append("birthdate", birthdate);
+            fd.append("gender", gender);
+            fd.append("email", email);
+            fd.append("password", password);
+
+            const res = await fetch('/register', {
+                method: 'POST',
+                body: fd
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert("Registrazione completata! Ora fai login 🔐");
+            }
+        }
+        function logout() {
+            localStorage.removeItem("skinUser");
+            user = null;
+
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('sidebar').style.display = 'none';
+            document.body.classList.remove('sidebar-active');
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('login-page').classList.add('active');
+        }
+
+       let lastNotifiedKey = "";
+
+       function startReminderChecker() {
+            setInterval(async () => {
+                if (!user || !notificationsEnabled) return;
+
+                const res = await fetch(`/get-reminders/${user.user_id}`);
+                const data = await res.json();
+
+                const now = new Date();
+                const currentTime = now.toTimeString().slice(0, 5);
+
+                console.log("ORA ATTUALE:", currentTime);
+                console.log("PROMEMORIA:", data);
+
+                data.forEach(r => {
+                    const reminderTime = (r.time || "").slice(0, 5);
+                    const notifyKey = `${r.title}-${reminderTime}-${new Date().toDateString()}`;
+
+                    if (reminderTime === currentTime && lastNotifiedKey !== notifyKey) {
+                        lastNotifiedKey = notifyKey;
+
+                        if (Notification.permission === "granted") {
+                            new Notification("SkinAtelier Reminder 💆‍♀️", {
+                                body: r.title
+                            });
+                        }
+                    }
+                });
+
+            }, 60000);
+        }
+
+        function vaiA(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-icon').forEach(b => b.classList.remove('active'));
+            if(id === 'scanner-page') document.getElementById('nav-scan').classList.add('active');
+            if(id === 'calendar-page') {
+                document.getElementById('nav-cal').classList.add('active');
+                caricaStorico();
+                setTimeout(() => fullCalendar.render(), 150);
+            }
+        }
+
+        async function eseguiLogin() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                alert("Inserisci email e password");
+                return;
+            }
+
+            const fd = new FormData();
+            fd.append("email", email);
+            fd.append("password", password);
+
+            const res = await fetch('/login', {
+                method: 'POST',
+                body: fd
+            });
+
+            user = await res.json();
+
+            if (user.error) {
+                alert(user.error);
+                return;
+            }
+            localStorage.setItem("skinUser", JSON.stringify(user));
+            document.getElementById('display-name').innerText = user.username;
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'flex';
+            document.body.classList.add('sidebar-active');
+            vaiA('scanner-page');
+            requestNotificationPermission();
+            startReminderChecker();
+        }
+
+        async function startAnalysis() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) return alert("Scegli foto");
+
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('result-container').classList.add('hidden');
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('user_id', user.user_id);
+
+    const res = await fetch('/analyze', {
+        method: 'POST',
+        body: fd
+    });
+
+    const data = await res.json();
+    console.log("RISPOSTA BACKEND:", data);
+
+    const result = data.result;
+    let html = `
+    <h3 class="text-xl font-bold mb-4">Analisi tecnica</h3>
+    <p class="mb-4">${result.analisi_tecnica}</p>
+
+    <h4 class="font-bold mt-4">Tipo pelle:</h4>
+    <p>${result.tipo_pelle}</p>
+
+    <h4 class="font-bold mt-4">Problemi rilevati:</h4>
+    <ul class="list-disc ml-5">
+    ${result.problemi_rilevati.map(p => `<li>${p}</li>`).join("")}
+    </ul>
+
+    <h4 class="font-bold mt-4">Routine mattina:</h4>
+    <ul class="list-disc ml-5">
+    ${result.routine_mattina.map(s => `<li>${s}</li>`).join("")}
+    </ul>
+
+    <h4 class="font-bold mt-4">Routine sera:</h4>
+    <ul class="list-disc ml-5">
+    ${result.routine_sera.map(s => `<li>${s}</li>`).join("")}
+    </ul>
+
+    <h3 class="text-xl font-bold mt-6 mb-4">Prodotti consigliati</h3>
+    `;
+
+    result.prodotti.forEach(p => {
+        let badge = "";
+        if (p.fascia === "top") badge = "🔥 TOP consigliato";
+        else if (p.fascia === "economico") badge = "💰 Economico";
+        else badge = "⭐ Premium";
+        html += `
+        <div class="luxury-card mb-5 border border-[#E8D5C4]">
+            <div class="flex items-start gap-3">
+                <div class="w-20 h-20 min-w-20 flex-shrink-0 rounded-2xl bg-[#FAF7F2] flex items-center justify-center overflow-hidden">
+                    <img src="${p.image_url || 'https://placehold.co/120x120/F5EFE8/8A6A55?text=Skin'}"
+                        class="w-full h-full object-cover">
+                </div>
+
+                <div class="flex-1">
+                    <h4 class="font-bold text-base flex justify-between items-center">
+                        ${p.nome}
+                        <span class="text-[10px] bg-[#FAF7F2] px-2 py-1 rounded-full">
+                            ${badge}
+                        </span>
+                    </h4>
+                    <p class="text-xs text-gray-500">${p.marca} • ${p.piattaforma}</p>
+
+                    <div class="mt-3 text-xs bg-[#FAF7F2] rounded-xl p-3">
+                        <b>Quando:</b> ${p.quando_usarlo}<br>
+                        <b>Frequenza:</b> ${p.frequenza}<br>
+                        <b>Orario:</b> ${p.orario_consigliato}
+                    </div>
+
+                    <p class="mt-3 text-sm">${p.motivo}</p>
+
+                    <a href="${p.affiliate_link}" target="_blank"
+                        class="block mt-3 text-center bg-gradient-to-r from-[#D9B99B] to-[#C9A27F] text-white py-3 rounded-xl font-bold shadow-md hover:scale-105 transition">
+                        🛒 Acquista ora su ${p.piattaforma}
+                        </a>
+
+                        <p class="text-xs text-gray-400 mt-1">
+                            🔥 Prodotto molto richiesto
+                        </p>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+
+    html += `<h3 class="text-xl font-bold mt-6">Promemoria</h3>`;
+
+    result.promemoria.forEach(r => {
+        html += `
+        <div class="luxury-card mb-3">
+            <b>${r.titolo}</b><br>
+            Orario: ${r.orario}<br>
+            Frequenza: ${r.frequenza}<br>
+            <small>${r.note}</small>
+        </div>
+        `;
+    });
+    const eta = result.eta_utente;
+    const genere = result.genere_utente || "";
+
+    html = `
+    <div class="luxury-card mb-4 text-center">
+        <div class="text-lg font-bold text-[#D9B99B]">Profilo utente</div>
+        <div class="mt-2 text-sm text-gray-600">
+            👤 ${eta} anni ${genere}
+        </div>
+    </div>
+    ` + html;
+
+    document.getElementById('analysis-text').innerHTML = html;
+    localStorage.setItem("lastAnalysis", JSON.stringify(result));
+
+    document.getElementById('result-container').classList.remove('hidden');
+    document.getElementById('loading').classList.add('hidden');
+}
+
+        async function caricaStorico() {
+            const res = await fetch(`/get-reminders/${user.user_id}`);
+            const data = await res.json();
+
+            const events = data.map(r => ({
+                title: r.title,
+                start: r.date,
+                display: 'background',
+                color: '#D9B99B'
+            }));
+
+            fullCalendar.removeAllEvents();
+            fullCalendar.addEventSource(events);
+
+            document.getElementById('history-list').innerHTML = data.map(r => `
+                <div class="luxury-card text-xs">
+                    <b>${r.title}</b><br>
+                    Orario: ${r.time}<br>
+                    Frequenza: ${r.frequency}
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fullCalendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth', locale: 'it', height: 350
+            });
+        });
+        const savedUser = localStorage.getItem("skinUser");
+
+        
+
+        if (savedUser) {
+            user = JSON.parse(savedUser);
+
+            document.getElementById('display-name').innerText = user.username;
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'flex';
+            document.body.classList.add('sidebar-active');
+
+            notificationsEnabled = user.notifications_enabled === 1;
+
+            document.getElementById("notifyBtn").innerText = notificationsEnabled
+                ? "🔔 Notifiche ON"
+                : "🔕 Notifiche OFF";
+
+            vaiA('scanner-page');
+            requestNotificationPermission();
+            startReminderChecker();
+        }
+
+        function openCamera() {
+            const input = document.getElementById("fileInput");
+            input.setAttribute("capture", "environment");
+            input.click();
+        }
+
+        function openGallery() {
+            const input = document.getElementById("fileInput");
+            input.removeAttribute("capture");
+            input.click();
+        }    
+
+        function handlePreview(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById("previewImage");
+
+            // 🔥 forza refresh immagine
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+
+            // opzionale: aggiorna testo
+            const label = document.getElementById("fileLabel");
+            if (label) {
+                label.innerText = "✅ Foto selezionata";
+            }
+        }
+
+         async function sendMsg() {
+    const msgInput = document.getElementById("msg");
+    const chatBox = document.getElementById("chatBox");
+    const msg = msgInput.value.trim();
+
+    if (!msg) return;
+
+    chatBox.innerHTML += `
+        <div style="background:#D9B99B;color:white;padding:10px 14px;border-radius:16px;margin:8px 0 8px auto;max-width:80%;">
+            ${msg}
+        </div>
+    `;
+
+    msgInput.value = "";
+
+    chatBox.innerHTML += `
+        <div id="typing" style="color:#999;font-size:13px;margin:10px 0;">
+            SkinAtelier sta scrivendo...
+        </div>
+    `;
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const fd = new FormData();
+    fd.append("message", msg);
+
+    const res = await fetch("/chat-skin", {
+        method: "POST",
+        body: fd
+    });
+
+    const data = await res.json();
+
+    document.getElementById("typing").remove();
+
+    chatBox.innerHTML += `
+        <div style="background:#FAF7F2;padding:14px;border-radius:18px;margin:10px 0;max-width:90%;">
+            <b>SkinAtelier ✨</b>
+            <p style="margin-top:8px;">${data.risposta}</p>
+
+            <ul style="margin-top:8px; padding-left:18px;">
+                ${data.routine.map(s => `<li>${s}</li>`).join("")}
+            </ul>
+
+            <div style="background:white;padding:12px;border-radius:14px;margin-top:12px;border:1px solid #eee;">
+                <b>${data.prodotto_consigliato.nome}</b><br>
+                <small>${data.prodotto_consigliato.marca}</small>
+                <p style="font-size:13px;margin-top:6px;">${data.prodotto_consigliato.motivo}</p>
+
+                <a href="${data.prodotto_consigliato.link}" target="_blank" class="awin-btn">
+                    🛒 Acquista
+                </a>
+            </div>
+        </div>
+    `;
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+    </script>
+</body>
+</html>

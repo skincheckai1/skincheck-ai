@@ -1,0 +1,79 @@
+import os
+import io
+import uvicorn
+from fastapi import FastAPI, File, UploadFile, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+import google.generativeai as genai
+from PIL import Image
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# --- CONFIGURAZIONE GOOGLE GEMINI ---
+# Uso la tua chiave più recente
+GOOGLE_API_KEY = "AIzaSyD0McrD_bDq5_SuLI256cEKvtu3R25adJw" 
+genai.configure(api_key=GOOGLE_API_KEY)
+
+def inizializza_modello():
+    """Questa funzione evita l'errore 404 cercando il modello attivo sulla tua chiave"""
+    try:
+        # Chiediamo a Google la lista dei modelli supportati dalla tua chiave
+        modelli_disponibili = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        # Cerchiamo prioritariamente gemini-1.5-flash
+        for m in modelli_disponibili:
+            if 'gemini-1.5-flash' in m:
+                print(f"✅ Modello trovato e attivato: {m}")
+                return genai.GenerativeModel(m)
+        
+        # Se non lo trova, prende il primo disponibile (es. gemini-pro)
+        print(f"⚠️ Modello flash non trovato, uso: {modelli_disponibili[0]}")
+        return genai.GenerativeModel(modelli_disponibili[0])
+    except Exception as e:
+        print(f"❌ Errore ricerca modelli: {e}")
+        # Fallback di sicurezza se la lista fallisce
+        return genai.GenerativeModel('gemini-1.5-flash')
+
+# Inizializziamo il modello all'avvio del server
+model = inizializza_modello()
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.post("/analyze")
+async def analyze_face_and_suggest(file: UploadFile = File(...)):
+    try:
+        # 1. Leggiamo l'immagine correttamente per Gemini
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data))
+        
+        # 2. Il Prompt "Beauty Advisor" (Quello che ti piaceva e funzionava)
+        prompt = """
+        Agisci come un'esperta Personal Beauty Advisor in una profumeria di lusso.
+        Analizza attentamente la foto del viso di questa cliente.
+        
+        Sulla base di ciò che vedi (solo a scopo estetico), fornisci:
+        1. **La Tua Impressione Estetica**: Descrivi la pelle con gentilezza (es. "Luminosa", "Zona T lucida").
+        2. **Beauty Routine Su Misura**: Crea una routine di 3 passaggi (Detergente, Siero, Crema).
+        3. **Suggerimenti di Shopping (Marca, Prodotto, Prezzo)**: 
+           Suggerisci prodotti reali (es. Clarins, Kiehl's, La Roche-Posay) con il **Prezzo Indicativo** (es. ~€30).
+
+        Usa emoji, un tono elegante e formatta bene in grassetto. Rispondi in italiano.
+        """
+        
+        # 3. Generazione del contenuto
+        response = model.generate_content([prompt, image])
+        
+        if not response.text:
+            return JSONResponse(content={"result": "L'IA non ha prodotto testo. Riprova."}, status_code=200)
+
+        return JSONResponse(content={"result": response.text})
+
+    except Exception as e:
+        print(f"❌ Errore durante l'analisi: {str(e)}")
+        return JSONResponse(content={"result": f"Errore: {str(e)}"}, status_code=500)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
