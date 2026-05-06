@@ -180,17 +180,19 @@
         let notificationsEnabled = true;
 
         function showRegister() {
+            document.getElementById("login-page").classList.remove("active");
             document.getElementById("login-page").style.display = "none";
+
             document.getElementById("register-page").style.display = "flex";
-            document.getElementById("scanner-page").style.display = "none";
-            document.getElementById("calendar-page").style.display = "none";
+            document.getElementById("register-page").classList.add("active");
         }
 
         function showLogin() {
-            document.getElementById("login-page").style.display = "flex";
+            document.getElementById("register-page").classList.remove("active");
             document.getElementById("register-page").style.display = "none";
-            document.getElementById("scanner-page").style.display = "none";
-            document.getElementById("calendar-page").style.display = "none";
+
+            document.getElementById("login-page").style.display = "flex";
+            document.getElementById("login-page").classList.add("active");
         }
 
         function showForgotPassword() {
