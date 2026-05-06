@@ -151,7 +151,7 @@ async def register(
         )
         conn.commit()
       
-        verification_link = f"http://127.0.0.1:8000/verify?token={token}"      
+        verification_link = f"https://skincheck-ai-1.onrender.com/verify?token={token}"      
        
         # 📩 INVIO EMAIL
         resend.Emails.send({
@@ -321,7 +321,7 @@ async def forgot_password(email: str = Form(...)):
     conn.commit()
     conn.close()
 
-    reset_link = f"http://127.0.0.1:8000/reset-password?token={token}"
+    reset_link = f"https://skincheck-ai-1.onrender.com/reset-password?token={token}"
 
     resend.Emails.send({
         "from": "SkinAtelier <onboarding@resend.dev>",
