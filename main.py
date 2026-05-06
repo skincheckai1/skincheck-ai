@@ -122,7 +122,7 @@ async def home(request: Request):
         request=request,
         name="index.html",
         context={}
-)
+    )
 
 from fastapi.responses import JSONResponse
 import hashlib
