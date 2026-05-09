@@ -341,7 +341,7 @@ async def forgot_password(email: str = Form(...)):
         </div>
         """
     })
-
+    print("RESET EMAIL INVIATA A:", email)
     return JSONResponse({"status": "ok"})
 
 @app.get("/reset-password")
