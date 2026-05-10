@@ -306,6 +306,8 @@ async def forgot_password(email: str = Form(...)):
     cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
     user = cursor.fetchone()
 
+    print("USER TROVATO:", user, flush=True)
+
     if not user:
         conn.close()
         return JSONResponse({"error": "Email non trovata"})
@@ -322,6 +324,8 @@ async def forgot_password(email: str = Form(...)):
     conn.close()
 
     reset_link = f"https://skincheck-ai-1.onrender.com/reset-password?token={token}"
+
+    print("STO INVIANDO RESET...", flush=True)
 
     resend.Emails.send({
         "from": "SkinAtelier <onboarding@resend.dev>",
